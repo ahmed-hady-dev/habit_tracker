@@ -1,7 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'core/getStorageCacheHelper/get_storage_cache_helper.dart';
+import 'package:habit_tracker/core/hive_helper/hive_helper.dart';
 import 'view/home/home_view.dart';
 import 'core/theme/theme.dart';
 import 'core/theme/theme_cubit.dart';
@@ -14,17 +14,17 @@ void main() async {
   //===============================================================
   await EasyLocalization.ensureInitialized();
   //===============================================================
-  await CacheHelper.init();
-  await CacheHelper.getTheme ?? await CacheHelper.cacheTheme(value: false);
-  bool? isDark = await CacheHelper.getTheme;
+  await HiveHelper.init();
+  await HiveHelper.getTheme ?? await HiveHelper.cacheTheme(value: false);
+  bool? isDark = await HiveHelper.getTheme;
   //===============================================================
   BlocOverrides.runZoned(
     () {
       runApp(EasyLocalization(
-        child: MyApp(isDark: isDark!),
         path: 'assets/translation',
         supportedLocales: const [Locale('en', 'US'), Locale('ar', 'EG')],
         fallbackLocale: const Locale('en', 'US'),
+        child: MyApp(isDark: isDark!),
       ));
     },
     blocObserver: MyBlocObserver(),
@@ -42,11 +42,13 @@ class MyApp extends StatelessWidget {
         ],
         child: BlocBuilder<ThemeCubit, ThemeState>(
           builder: (context, state) {
+            bool themeCubit = ThemeCubit.get(context).isDark;
             return MaterialApp(
               title: 'Habit Tracker',
               debugShowCheckedModeBanner: false,
               navigatorKey: navigatorKey,
               onGenerateRoute: onGenerateRoute,
+              themeMode: themeCubit ? ThemeMode.dark : ThemeMode.light,
               theme: lightTheme(context),
               darkTheme: darkTheme(context),
               locale: context.locale,
